@@ -10,7 +10,7 @@ public class Query {
 	
 	private final String nameRequete;
 	private final String value;
-	private final static String checkQueryFormatRegex ="method=([a-zA-Z\\d]*?)&value=([a-zA-Z\\d]*?)$";
+	private final static String checkQueryFormatRegex ="method=(\\S[a-zA-Z\\d]*?)&value=(\\S[a-zA-Z\\d]*?)$";
 
 	public Query(String nameRequete, String value) {
 		Objects.requireNonNull(nameRequete);
