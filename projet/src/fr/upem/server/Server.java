@@ -1,8 +1,6 @@
 package fr.upem.server;
 
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import fr.upem.decoder.Decoder;
 import io.vertx.core.AbstractVerticle;
@@ -16,10 +14,9 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.StaticHandler;
 
-public class Server extends AbstractVerticle{
-	
+public class Server extends AbstractVerticle {
+
 	private final int port = 8080;
-	private final String checkQueryFormatRegex ="method=([a-zA-Z\\d]*?)&value=([a-zA-Z\\d]*?)$";
 
 	@Override
 	public void start() throws Exception {
@@ -27,58 +24,57 @@ public class Server extends AbstractVerticle{
 		manageRouter(router);
 		router.route().handler(StaticHandler.create());
 		vertx.createHttpServer(createHttpSServerOptions()).requestHandler(router::accept).listen(port);
-		System.out.println("listen on port "+port);
+		System.out.println("listen on port " + port);
 	}
-	
-	private HttpServerOptions createHttpSServerOptions(){
-		return new HttpServerOptions().setSsl(true).setKeyStoreOptions(
-		        new JksOptions().setPath("keystore.jks").setPassword("direct11") );
+
+	private HttpServerOptions createHttpSServerOptions() {
+		return new HttpServerOptions().setSsl(true)
+				.setKeyStoreOptions(new JksOptions().setPath("keystore.jks").setPassword("direct11"));
 	}
-	
-	private void manageRouter(Router router){
-		Route postDbMethod = router.route(HttpMethod.POST,"/api/json/db");
+
+	private void manageRouter(Router router) {
+		Route postDbMethod = router.route(HttpMethod.POST, "/api/json/db");
 		postDbMethod.handler(this::manageDataBaseRoutingContext);
 
 	}
-	
 
-	private boolean isAuthentified(HttpServerRequest request){
+	private boolean isAuthentified(HttpServerRequest request) {
 		String authorization = request.headers().get(HttpHeaders.AUTHORIZATION);
-		if (authorization != null && authorization.substring(0,6).equals("Basic ")) {
+		if (authorization != null && authorization.substring(0, 6).equals("Basic ")) {
 			String identifiant = authorization.substring(6);
 			System.out.println(Decoder.decode(identifiant));
 			return true;
-		}		
+		}
 		return false;
 	}
-		
+
 	private void manageDataBaseRoutingContext(RoutingContext routingContext) {
-		Objects.requireNonNull(routingContext);
 		HttpServerRequest request = routingContext.request();
-		if(isAuthentified(request)){
-			manageHttpServerRequest(request);
-		}else{
+		if (isAuthentified(request)) {
+			manageQueryFromHttpServer(routingContext);
+		} else {
+			ServerResponse.authentificationError(routingContext);
 			throw new IllegalStateException("No authentified.");
 		}
 	}
-	
-	private void manageHttpServerRequest(HttpServerRequest request){
-		Objects.requireNonNull(request);
-		Query query = detectParameters(request);
-		if(query!=null)
-		{
-			System.out.println(query);
+
+	private void manageQueryFromHttpServer(RoutingContext routingContext) {
+		HttpServerRequest request = routingContext.request();
+		try {
+			manageHttpServerRequest(request);
+		} catch (Exception e) {
+			ServerResponse.authentificationQuery(routingContext);
+			System.out.println(e.getMessage());
 		}
 	}
-	
-	private Query detectParameters(HttpServerRequest request){
-		Objects.requireNonNull(request.query());	
-	    Pattern pattern = Pattern.compile(checkQueryFormatRegex);
-	    Matcher matcher = pattern.matcher(request.query());
-	    if(!matcher.matches()){
-	    	throw new IllegalAccessError("URL INVALIDE");
-	    }
-    	return new Query(matcher.group(1), matcher.group(2));		
+
+	private void manageHttpServerRequest(HttpServerRequest request) {
+		Objects.requireNonNull(request);
+		try {
+			Query query = Query.detectParameters(request);
+			System.out.println(query);
+		} catch (Exception e) {
+			throw e;
+		}
 	}
-	
 }
