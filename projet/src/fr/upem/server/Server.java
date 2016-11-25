@@ -1,10 +1,10 @@
 package fr.upem.server;
 
-import java.util.Base64;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import fr.upem.decoder.Decoder;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
@@ -41,16 +41,12 @@ public class Server extends AbstractVerticle{
 
 	}
 	
-	private static String decode(String string) {
-		byte[] byteArray = Base64.getDecoder().decode(string.getBytes());
-		return new String(byteArray);
-	} 
-	
+
 	private boolean isAuthentified(HttpServerRequest request){
 		String authorization = request.headers().get(HttpHeaders.AUTHORIZATION);
 		if (authorization != null && authorization.substring(0,6).equals("Basic ")) {
 			String identifiant = authorization.substring(6);
-			System.out.println(decode(identifiant));
+			System.out.println(Decoder.decode(identifiant));
 			return true;
 		}		
 		return false;
