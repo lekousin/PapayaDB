@@ -10,6 +10,7 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.net.JksOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
@@ -84,30 +85,21 @@ public class Server extends AbstractVerticle {
 	}
 
 	private void manageQueryFromHttpServer(RoutingContext routingContext) {
-		HttpServerRequest request = routingContext.request();
 		try {
-			manageHttpServerRequest(request);
+			Query query = Query.detectParameters(routingContext.request());
+			String response = execQuery(query);
+			ServerResponse.jsonResponse(routingContext, Json.encodePrettily(response));
 		} catch (Exception e) {
 			ServerResponse.queryError(routingContext);
-			System.out.println(e.getMessage());
 		}
 	}
 
-	private void manageHttpServerRequest(HttpServerRequest request) {
-		Objects.requireNonNull(request);
-		Query query = Query.detectParameters(request);
-		try {
-			execQuery(query);
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
-			System.out.println(e.getMessage());
-		}
-	}
-	
-	private void execQuery(Query query) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+	private String execQuery(Query query) throws NoSuchMethodException, SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
 		Class<Query> q = Query.class;
 		Method gs1Method = q.getMethod(query.getNameRequete(), new Class[] { Query.class });
 		String response = (String) gs1Method.invoke(q, new Object[] { query });
-		System.out.println(response);
+		return response;
 	}
-	
+
 }

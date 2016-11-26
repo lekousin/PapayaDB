@@ -5,6 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 
 public class Query {
 
@@ -44,10 +45,10 @@ public class Query {
 	}
 
 	public static String createdb(Query query) {
-		return query.toString();
+		return Json.encodePrettily(query);
 	}
 
 	public static String deletedb(Query query) {
-		return query.toString();
+		return Json.encodePrettily(query);
 	}
 }

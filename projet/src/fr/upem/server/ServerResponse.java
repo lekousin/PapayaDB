@@ -9,7 +9,14 @@ import io.vertx.ext.web.RoutingContext;
  *
  */
 public class ServerResponse {
-
+	
+	public static void jsonResponse(RoutingContext routingContext,String json){
+		routingContext.response().putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(json.length()))
+		.putHeader("Content-type", "application/json")
+		.write(json)
+		.end();
+	}
+	
 	public static void authentificationError(RoutingContext routingContext){
 		sendErrorResponse(routingContext, "Error Authentification");
 	}
