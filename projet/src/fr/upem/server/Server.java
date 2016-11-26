@@ -126,7 +126,6 @@ public class Server extends AbstractVerticle {
 	private String execRootMethod(RootMethod rootMethod) throws NoSuchMethodException, SecurityException, IllegalAccessException,
 	IllegalArgumentException, InvocationTargetException {
 		Class<RootMethod> q = RootMethod.class;
-
 		Method gs1Method = q.getMethod(rootMethod.getNameRequete(), new Class[] { RootMethod.class });
 		String response = (String) gs1Method.invoke(q, new Object[] { rootMethod });
 		return response;

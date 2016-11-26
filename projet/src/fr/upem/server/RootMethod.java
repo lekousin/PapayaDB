@@ -49,7 +49,6 @@ public class RootMethod {
 	public static RootMethod builtQueryWithParameters(HttpServerRequest request, String checkQueryFormatRegex) {
 		Objects.requireNonNull(request.query());
 		Matcher matcher = checkRegex(request.query(), checkQueryFormatRegex);
-		
 		return new RootMethod(matcher.group(1), matcher.group(2));
 	}
 
@@ -67,8 +66,8 @@ public class RootMethod {
 		}
 		return matcher;
 	}
-	
-	public static String listdb(RootMethod rootMethod) {
-		return Json.encodePrettily(rootMethod);
+
+	public static String listdb(RootMethod query) {
+		return Json.encodePrettily(query);
 	}
 }
