@@ -1,5 +1,7 @@
 package fr.upem.server;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Objects;
 
 import fr.upem.decoder.Decoder;
@@ -15,29 +17,28 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.StaticHandler;
 
 /**
- * @author kristof
- * This class describes the implementation of a custom vertx server
+ * @author kristof This class describes the implementation of a custom vertx
+ *         server
  *
  */
 public class Server extends AbstractVerticle {
 
-	private int port;
+	private int portHTTPS;
 
 	/**
 	 * 
 	 * @param port
 	 */
 	public Server(int port) {
-		this.port = port;
+		this.portHTTPS = port;
 	}
-	
-	
+
 	@Override
 	public void start() throws Exception {
 		Router router = Router.router(vertx);
 		manageRouter(router);
 		router.route().handler(StaticHandler.create());
-		vertx.createHttpServer(createHttpSServerOptions()).requestHandler(router::accept).listen(port);
+		vertx.createHttpServer(createHttpSServerOptions()).requestHandler(router::accept).listen(portHTTPS);
 	}
 
 	private HttpServerOptions createHttpSServerOptions() {
@@ -53,12 +54,12 @@ public class Server extends AbstractVerticle {
 		insertDocMethod.handler(this::manageInsertRoutingContext);
 
 	}
-	
+
 	private void manageInsertRoutingContext(RoutingContext routingContext) {
 		HttpServerRequest request = routingContext.request();
 		System.out.println(request.absoluteURI());
 		System.out.println(request.path());
-		
+
 		manageQueryFromHttpServer(routingContext);
 	}
 
@@ -94,11 +95,19 @@ public class Server extends AbstractVerticle {
 
 	private void manageHttpServerRequest(HttpServerRequest request) {
 		Objects.requireNonNull(request);
+		Query query = Query.detectParameters(request);
 		try {
-			Query query = Query.detectParameters(request);
-			System.out.println(query);
-		} catch (Exception e) {
-			throw e;
+			execQuery(query);
+		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException| InvocationTargetException e) {
+			System.out.println(e.getMessage());
 		}
 	}
+	
+	private void execQuery(Query query) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		Class<Query> q = Query.class;
+		Method gs1Method = q.getMethod(query.getNameRequete(), new Class[] { Query.class });
+		String response = (String) gs1Method.invoke(q, new Object[] { query });
+		System.out.println(response);
+	}
+	
 }
