@@ -7,6 +7,6 @@ public class Launch {
 	public static void main(String[] argv){
 		System.out.println("Launch WEB Server");
 		Vertx vertx = Vertx.vertx();
-		vertx.deployVerticle(new Server());
+		vertx.deployVerticle(new Server(8080));
 	}
 }

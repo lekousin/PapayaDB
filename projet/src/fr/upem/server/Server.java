@@ -14,17 +14,30 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.StaticHandler;
 
+/**
+ * @author kristof
+ * This class describes the implementation of a custom vertx server
+ *
+ */
 public class Server extends AbstractVerticle {
 
-	private final int port = 8080;
+	private int port;
 
+	/**
+	 * 
+	 * @param port
+	 */
+	public Server(int port) {
+		this.port = port;
+	}
+	
+	
 	@Override
 	public void start() throws Exception {
 		Router router = Router.router(vertx);
 		manageRouter(router);
 		router.route().handler(StaticHandler.create());
 		vertx.createHttpServer(createHttpSServerOptions()).requestHandler(router::accept).listen(port);
-		System.out.println("listen on port " + port);
 	}
 
 	private HttpServerOptions createHttpSServerOptions() {
@@ -34,8 +47,19 @@ public class Server extends AbstractVerticle {
 
 	private void manageRouter(Router router) {
 		Route postDbMethod = router.route(HttpMethod.POST, "/api/json/db");
-		postDbMethod.handler(this::manageDataBaseRoutingContext);
+		Route insertDocMethod = router.route(HttpMethod.POST, "/api/json/document");
 
+		postDbMethod.handler(this::manageDataBaseRoutingContext);
+		insertDocMethod.handler(this::manageInsertRoutingContext);
+
+	}
+	
+	private void manageInsertRoutingContext(RoutingContext routingContext) {
+		HttpServerRequest request = routingContext.request();
+		System.out.println(request.absoluteURI());
+		System.out.println(request.path());
+		
+		manageQueryFromHttpServer(routingContext);
 	}
 
 	private boolean isAuthentified(HttpServerRequest request) {
@@ -63,7 +87,7 @@ public class Server extends AbstractVerticle {
 		try {
 			manageHttpServerRequest(request);
 		} catch (Exception e) {
-			ServerResponse.authentificationQuery(routingContext);
+			ServerResponse.queryError(routingContext);
 			System.out.println(e.getMessage());
 		}
 	}

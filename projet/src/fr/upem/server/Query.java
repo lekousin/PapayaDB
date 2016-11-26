@@ -10,8 +10,8 @@ public class Query {
 	
 	private final String nameRequete;
 	private final String value;
-	private final static String checkQueryFormatRegex ="method=(\\S[a-zA-Z\\d]*?)&value=(\\S[a-zA-Z\\d]*?)$";
-
+	private final static String checkQueryFormatRegex ="method=%27(\\S[a-zA-Z\\d]*?)%27&value=%27(\\S[a-zA-Z\\d]*?)%27$";
+	
 	public Query(String nameRequete, String value) {
 		Objects.requireNonNull(nameRequete);
 		Objects.requireNonNull(value);
@@ -27,6 +27,7 @@ public class Query {
 	public static Query detectParameters(HttpServerRequest request) {
 		Objects.requireNonNull(request.query());	
 	    Pattern pattern = Pattern.compile(checkQueryFormatRegex);
+	    System.out.println(request.query());
 	    Matcher matcher = pattern.matcher(request.query());
 	    if(!matcher.matches()){
 	    	throw new IllegalAccessError();
