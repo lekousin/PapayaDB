@@ -2,7 +2,6 @@ package fr.upem.server;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Objects;
 
 import fr.upem.decoder.Decoder;
 import io.vertx.core.AbstractVerticle;
@@ -49,11 +48,23 @@ public class Server extends AbstractVerticle {
 
 	private void manageRouter(Router router) {
 		Route postDbMethod = router.route(HttpMethod.POST, "/api/json/db");
+		Route rootMethod = router.route(HttpMethod.GET, "/api/json/");
 		Route insertDocMethod = router.route(HttpMethod.POST, "/api/json/document");
 
+		rootMethod.handler(this::manageRootRoutingContext);
 		postDbMethod.handler(this::manageDataBaseRoutingContext);
 		insertDocMethod.handler(this::manageInsertRoutingContext);
 
+	}
+
+	private void manageRootRoutingContext(RoutingContext routingContext) {
+		HttpServerRequest request = routingContext.request();
+		if (isAuthentified(request)) {
+			manageQueryRootFromHttpServer(routingContext);
+		} else {
+			ServerResponse.authentificationError(routingContext);
+			throw new IllegalStateException("No authentified.");
+		}
 	}
 
 	private void manageInsertRoutingContext(RoutingContext routingContext) {
@@ -86,7 +97,7 @@ public class Server extends AbstractVerticle {
 
 	private void manageQueryFromHttpServer(RoutingContext routingContext) {
 		try {
-			Query query = Query.detectParameters(routingContext.request());
+			Query query = Query.builtQueryWithParameters(routingContext.request(),Query.REGEX_DB);
 			String response = execQuery(query);
 			ServerResponse.jsonResponse(routingContext, Json.encodePrettily(response));
 		} catch (Exception e) {
@@ -94,11 +105,30 @@ public class Server extends AbstractVerticle {
 		}
 	}
 
+	private void manageQueryRootFromHttpServer(RoutingContext routingContext) {
+		try {
+			RootMethod rootMethod = RootMethod.builtQueryWithParameters(routingContext.request(),RootMethod.REGEX_DB);
+			String response = execRootMethod(rootMethod);
+			ServerResponse.jsonResponse(routingContext, Json.encodePrettily(response));
+		} catch (Exception e) {
+			ServerResponse.queryError(routingContext);
+		}
+	}
+
 	private String execQuery(Query query) throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
+	IllegalArgumentException, InvocationTargetException {
 		Class<Query> q = Query.class;
 		Method gs1Method = q.getMethod(query.getNameRequete(), new Class[] { Query.class });
 		String response = (String) gs1Method.invoke(q, new Object[] { query });
+		return response;
+	}
+
+	private String execRootMethod(RootMethod rootMethod) throws NoSuchMethodException, SecurityException, IllegalAccessException,
+	IllegalArgumentException, InvocationTargetException {
+		Class<RootMethod> q = RootMethod.class;
+
+		Method gs1Method = q.getMethod(rootMethod.getNameRequete(), new Class[] { RootMethod.class });
+		String response = (String) gs1Method.invoke(q, new Object[] { rootMethod });
 		return response;
 	}
 

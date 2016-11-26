@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 package fr.upem.server;
 
 import java.util.Objects;
@@ -7,8 +10,11 @@ import java.util.regex.Pattern;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 
-public class Query {
-
+/**
+ * @author master
+ *
+ */
+public class RootMethod {
 	private final String nameRequete;
 
 	public String getNameRequete() {
@@ -22,14 +28,14 @@ public class Query {
 	private final String value;
 	public final static String REGEX_DB = "method=%27(\\S[a-zA-Z\\d]*?)%27&value=%27(\\S[a-zA-Z\\d]*?)%27$";
 
-	public Query(String nameRequete, String value) {
+	public RootMethod(String nameRequete, String value) {
 		Objects.requireNonNull(nameRequete);
 		Objects.requireNonNull(value);
 		this.value = value;
 		this.nameRequete = nameRequete;
 	}
 
-	public Query(String nameRequete) {
+	public RootMethod(String nameRequete) {
 		Objects.requireNonNull(nameRequete);
 		this.value = null;
 		this.nameRequete = nameRequete;
@@ -40,10 +46,11 @@ public class Query {
 		return nameRequete + " " + value;
 	}
 
-	public static Query builtQueryWithParameters(HttpServerRequest request, String checkQueryFormatRegex) {
+	public static RootMethod builtQueryWithParameters(HttpServerRequest request, String checkQueryFormatRegex) {
 		Objects.requireNonNull(request.query());
 		Matcher matcher = checkRegex(request.query(), checkQueryFormatRegex);
-		return new Query(matcher.group(1), matcher.group(2));
+		
+		return new RootMethod(matcher.group(1), matcher.group(2));
 	}
 
 	/**
@@ -60,12 +67,8 @@ public class Query {
 		}
 		return matcher;
 	}
-
-	public static String createdb(Query query) {
-		return Json.encodePrettily(query);
-	}
-
-	public static String deletedb(Query query) {
-		return Json.encodePrettily(query);
+	
+	public static String listdb(RootMethod rootMethod) {
+		return Json.encodePrettily(rootMethod);
 	}
 }
